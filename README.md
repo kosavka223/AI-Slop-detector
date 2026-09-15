@@ -2,149 +2,71 @@
 
 Enterprise-grade multi-signal analysis system for detecting AI-generated and AI-assisted email spam campaigns.
 
+## Table of Contents
 
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Quick Start](#quick-start)
+- [Documentation](#documentation)
+- [Development](#development)
+- [Project Structure](#project-structure)
+- [Testing](#testing)
+- [Performance Targets](#performance-targets)
+- [Deployment](#deployment)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+- [Support](#support)
 
- Table of Contents
-
-* Overview⁠￼
-* Key Features⁠￼
-    * Multi-Signal Analysis⁠￼
-    * Campaign Detection⁠￼
-    * Explainable AI⁠￼
-    * False Positive Reduction⁠￼
-* Architecture⁠￼
-* Tech Stack⁠￼
-* Quick Start⁠￼
-* Documentation⁠￼
-* Development⁠￼
-* Project Structure⁠￼
-* Testing⁠￼
-* Performance Targets⁠￼
-* Deployment⁠￼
-* Roadmap⁠￼
-* Contributing⁠￼
-* License⁠￼
-* Support⁠￼
-
-
-
- Overview
+## Overview
 
 AI-Slop-detector is a multi-signal analysis system designed to detect AI-generated and AI-assisted email spam and phishing campaigns.
 
 Instead of relying solely on traditional text classification, the system analyzes artifacts across the entire email creation pipeline:
-
-* email text;
-* HTML structure;
-* embedded images;
-* links and URLs;
-* email metadata;
-* campaign-level behavior and scaling patterns.
+- email text
+- HTML structure
+- embedded images
+- links and URLs
+- email metadata
+- campaign-level behavior and scaling patterns
 
 The goal is to identify combinations of signals that may indicate that an email was generated or significantly assisted by a Large Language Model (LLM), while reducing false positives from legitimate automated email systems such as CRM and SaaS platforms.
 
-Research Foundation
-
+### Research Foundation
 The detection methodology is based on recent academic research:
+- *Do Spammers Dream of Electric Sheep?* — IMC 2025
+- *Machine Learning and Watermarking for AI-Generated Phishing Detection*
+- *SpearBot*
+- *Phish-Master*
 
-* ⁠Do Spammers Dream of Electric Sheep? — IMC 2025
-* ⁠Machine Learning and Watermarking for AI-Generated Phishing Detection
-* ⁠SpearBot
-* ⁠Phish-Master
+## Key Features
 
-
-
- Key Features
-
-Multi-Signal Analysis
-
+### Multi-Signal Analysis
 The system combines several independent analyzers instead of relying on a single classifier.
 
- Text Analyzer
+- **Text Analyzer**: Analyzes the textual content of an email and detects style inconsistencies, burstiness anomalies, LLM-specific writing patterns, unusual phrase structures, and inconsistencies between different parts of the message.
+- **HTML Analyzer**: Analyzes the structure and implementation of HTML emails. It detects AI-generated HTML boilerplate, unusual DOM structures, unsupported CSS frameworks, Tailwind CSS classes used directly in email HTML, and suspicious or unnecessarily complex layouts.
+- **Image Analyzer**: Analyzes images embedded in emails. Performs OCR quality scoring, OCR/content consistency checks, GenAI artifact detection, image manipulation analysis, and QR-code validation.
+- **Link Analyzer**: Analyzes URLs and hyperlinks contained in emails. Checks for semantic mismatch between anchor text and destination URL, suspicious domains, domain reputation, LLM-generated DGA-like domains, and inconsistencies between displayed and actual links.
+- **Metadata Analyzer**: Validates email authentication and metadata consistency. Analyzes email headers, DKIM, SPF, DMARC, domain alignment, and inconsistencies between authentication results and message metadata.
 
-Analyzes the textual content of an email and detects:
-
-* style inconsistencies;
-* burstiness anomalies;
-* LLM-specific writing patterns;
-* unusual phrase structures;
-* inconsistencies between different parts of the message.
-
- HTML Analyzer
-
-Analyzes the structure and implementation of HTML emails.
-
-It can detect:
-
-* AI-generated HTML boilerplate;
-* unusual DOM structures;
-* unsupported CSS frameworks;
-* Tailwind CSS classes used directly in email HTML;
-* suspicious or unnecessarily complex layouts.
-
- Image Analyzer
-
-Analyzes images embedded in emails.
-
-The analyzer performs:
-
-* OCR quality scoring;
-* OCR/content consistency checks;
-* GenAI artifact detection;
-* image manipulation analysis;
-* QR-code validation.
-
- Link Analyzer
-
-Analyzes URLs and hyperlinks contained in emails.
-
-It checks for:
-
-* semantic mismatch between anchor text and destination URL;
-* suspicious domains;
-* domain reputation;
-* LLM-generated DGA-like domains;
-* inconsistencies between displayed and actual links.
-
-Metadata Analyzer
-
-Validates email authentication and metadata consistency.
-
-It analyzes:
-
-* email headers;
-* DKIM;
-* SPF;
-* DMARC;
-* domain alignment;
-* inconsistencies between authentication results and message metadata.
-
-
-
- Campaign Detection
-
-AI-assisted spam campaigns can generate thousands of slightly different messages.
-
-To detect this behavior, the system provides campaign-level analysis:
-
-* intent-based semantic clustering;
-* semantic similarity instead of simple lexical comparison;
-* automated detection of message variations;
-* identification of LLM-generated paraphrasing;
-* real-time campaign state tracking using Redis.
+### Campaign Detection
+AI-assisted spam campaigns can generate thousands of slightly different messages. To detect this behavior, the system provides campaign-level analysis:
+- intent-based semantic clustering
+- semantic similarity instead of simple lexical comparison
+- automated detection of message variations
+- identification of LLM-generated paraphrasing
+- real-time campaign state tracking using Redis
 
 This allows the system to detect campaigns even when attackers generate many versions of essentially the same message.
 
+### Explainable AI (XAI)
+The system produces structured JSON results explaining why a message was classified as suspicious. The output is designed for direct integration with SIEM/SOAR platforms.
 
-
- Explainable AI (XAI)
-
-The system produces structured JSON results explaining why a message was classified as suspicious.
-
-The output is designed for direct integration with SIEM/SOAR platforms.
-
-Example
-
+**Example:**
+```json
 {
   "email_id": "msg_884291",
   "overall_risk": "High",
@@ -171,8 +93,6 @@ Example
   }
 }
 
-
-
  False Positive Reduction
 
 The system is designed to distinguish malicious AI-assisted campaigns from legitimate automated email.
@@ -189,52 +109,43 @@ False-positive reduction includes:
 
  Architecture
 
-The system uses an event-driven microservices architecture with Apache Kafka as the primary message broker.
+```mermaid
+graph TD
+    
+    Ingestion["📥 EMAIL INGESTION<br/>Kafka Topic: emails.raw"]
+    Parser["⚙️ PARSER SERVICE<br/>MIME parsing, extraction, storage to MinIO/S3"]
+    
+    Text["📝 TEXT Analyzer"]
+    Html["🎨 HTML Analyzer"]
+    Image["🖼️ IMAGE Analyzer"]
+    
+    LinkMeta["🔗 LINK/META ANALYZER"]
+    
+    Aggregator["🧩 AGGREGATOR SERVICE<br/>Signal combination + scoring<br/>Campaign clustering (Redis)"]
+    
+    Decision["⚖️ DECISION ENGINE<br/>Business rules + A/B testing"]
+    
+    Output["📤 OUTPUT<br/>SIEM / SOAR"]
 
-┌─────────────────────────────────────────────────────────────┐
-│                    EMAIL INGESTION                          │
-│              Kafka Topic: emails.raw                        │
-└─────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    PARSER SERVICE                           │
-│       MIME parsing, extraction, storage to MinIO/S3         │
-└─────────────────────────────────────────────────────────────┘
-                            │
-         ┌──────────────────┼──────────────────┐
-         ▼                  ▼                  ▼
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│    TEXT     │    │    HTML     │    │    IMAGE    │
-│   Analyzer  │    │   Analyzer  │    │   Analyzer  │
-└──────┬──────┘    └──────┬──────┘    └──────┬──────┘
-       │                   │                  │
-       └───────────────────┼──────────────────┘
-                           ▼
-              ┌───────────────────────┐
-              │   LINK/META ANALYZER  │
-              └───────────┬───────────┘
-                          ▼
-         ┌────────────────────────────────┐
-         │       AGGREGATOR SERVICE       │
-         │  Signal combination + scoring  │
-         │  Campaign clustering (Redis)   │
-         └────────────┬───────────────────┘
-                      ▼
-         ┌────────────────────────────────┐
-         │        DECISION ENGINE         │
-         │  Business rules + A/B testing │
-         └────────────┬───────────────────┘
-                      ▼
-              ┌───────────────┐
-              │    OUTPUT     │
-              │   SIEM/SOAR   │
-              └───────────────┘
+    
+    Ingestion --> Parser
+    Parser --> Text
+    Parser --> Html
+    Parser --> Image
+    
+    Text --> LinkMeta
+    Html --> LinkMeta
+    Image --> LinkMeta
+    
+    LinkMeta --> Aggregator
+    Aggregator --> Decision
+    Decision --> Output
 
-For the complete architectural decision record, see:
-
-ADR-001 — Event-Driven Architecture⁠￼
-
+    
+    classDef default fill:#f9f9f9,stroke:#333,stroke-width:2px,rx:5,ry:5;
+    classDef highlight fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    class Ingestion,Output highlight;
+```
 
 
  Tech Stack
