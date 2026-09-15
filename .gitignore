@@ -7,40 +7,139 @@ __pycache__/
 build/
 dist/
 *.egg-info/
+*.egg
 .venv/
 venv/
 env/
+ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+
 
 # IDE
+
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.project
+.pydevproject
+.settings/
+
 
 # Testing
+
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
+.tox/
+.nox/
+nosetests.xml
+nosetests.html
+test-results.xml
 
-# ML
+
+# Machine Learning
+
+# Models
 *.pkl
 *.joblib
 *.onnx
 *.pt
+*.pth
+*.safetensors
+*.bin
+*.h5
+*.pb
+*.tflite
+*.mlmodel
+
+# Training artifacts
 wandb/
+mlruns/
+checkpoints/
+logs/tensorboard/
+
+# Datasets
+data/raw/
+data/processed/
+data/interim/
+data/external/
+datasets/
+
 
 # Infrastructure
+
+# Terraform
 .terraform/
 *.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+*.tfvars
+!*.tfvars.example
+
+# Kubernetes
+*.kubeconfig
+
 
 # Logs
+
 *.log
 logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Environment
+
+# Environment & Secrets
+
 .env
 .env.local
+.env.*.local
+.env.staging
+.env.production
+.env.*.backup
+
+# Secrets
+secrets/
+*.secret
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+
+
+# Docker
+
+docker-compose.override.yml
+
 
 # OS
+
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+
+# Misc
+
+*.bak
+*.tmp
+*.temp
+.cache/
+*.swp
