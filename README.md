@@ -92,7 +92,7 @@ The system produces structured JSON results explaining why a message was classif
     "pattern": "LLM paraphrasing with low lexical overlap"
   }
 }
-
+```
  False Positive Reduction
 
 The system is designed to distinguish malicious AI-assisted campaigns from legitimate automated email.
@@ -107,7 +107,7 @@ False-positive reduction includes:
 
 
 
- Architecture
+ ## Architecture
 
 ```mermaid
 graph TD
