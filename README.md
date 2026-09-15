@@ -308,7 +308,7 @@ Allowed Types
 
 
  Project Structure
-
+```text
 ai-slop-detector/
 │
 ├── services/                  # Microservices
@@ -344,7 +344,7 @@ ai-slop-detector/
     ├── architecture/
     ├── api/
     └── runbooks/
-
+```
 
 
  Testing
@@ -512,7 +512,7 @@ If you need help with the project, use the following resources:
 
 Current version: v0.1.0
 
-Status: 🚧 Active Development
+Status:  Active Development
 
 The project is currently focused on implementing the core infrastructure and initial detection services. Advanced ML capabilities and production deployment features are planned for subsequent development phases.
 
