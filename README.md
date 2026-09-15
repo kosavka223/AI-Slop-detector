@@ -1,4 +1,4 @@
-#AI-Slop-detector
+# AI-Slop-detector
 
 Enterprise-grade multi-signal analysis system for detecting AI-generated and AI-assisted email spam campaigns.
 
