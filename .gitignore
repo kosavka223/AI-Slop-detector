@@ -62,12 +62,12 @@ mlruns/
 checkpoints/
 logs/tensorboard/
 
-# Datasets
-data/raw/
-data/processed/
-data/interim/
-data/external/
-datasets/
+# Datasets — ignore at any level (ml/, services/, etc.)
+**/data/raw/
+**/data/processed/
+**/data/interim/
+**/data/external/
+**/datasets/
 
 
 # Infrastructure
