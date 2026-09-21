@@ -2,10 +2,12 @@
 import asyncio
 import json
 import random
+import os
 from datetime import datetime, timezone
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 
+KAFKA = os.getenv("KAFKA_BOOTSTRAP", "localhost:9092")
 RAW_TOPIC = "emails.raw"
 OUTPUT_TOPIC = "analysis.text"
 
@@ -13,12 +15,12 @@ OUTPUT_TOPIC = "analysis.text"
 async def main():
     consumer = AIOKafkaConsumer(
         RAW_TOPIC,
-        bootstrap_servers="localhost:9092",
+        bootstrap_servers=KAFKA,
         group_id="mock-analyzer",
         value_deserializer=lambda v: json.loads(v.decode("utf-8")),
     )
     producer = AIOKafkaProducer(
-        bootstrap_servers="localhost:9092",
+        bootstrap_servers=KAFKA,
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
     )
     await consumer.start()
