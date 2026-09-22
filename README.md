@@ -1,9 +1,9 @@
-```markdown
+````markdown
 # AI-Slop-detector
 
 Multi-signal analysis system for detecting AI-generated and AI-assisted email spam.
 
-## Table of Contents
+# Table of Contents
 
 - [Overview](#overview)
 - [Key Features](#key-features)
@@ -17,7 +17,7 @@ Multi-signal analysis system for detecting AI-generated and AI-assisted email sp
 - [Roadmap](#roadmap)
 - [License](#license)
 
-## Overview
+# Overview
 
 AI-Slop-detector is a multi-signal analysis system designed to detect AI-generated
 and AI-assisted email spam.
@@ -37,7 +37,7 @@ The system is built as an additional analytical layer on top of an existing
 anti-spam pipeline: it does not just output a class, but explains **which elements**
 of the message look AI-generated and **how confident** the system is.
 
-### Research Foundation
+## Research Foundation
 
 The detection methodology is based on recent academic research:
 
@@ -48,7 +48,7 @@ The detection methodology is based on recent academic research:
 
 ## Key Features
 
-### Multi-Signal Analysis
+## Multi-Signal Analysis
 
 The system combines several independent analyzers instead of relying on a single
 classifier. Each analyzer runs as an independent service and publishes its result
@@ -61,7 +61,7 @@ to its own Kafka topic:
 | **Image Analyzer** | `analysis.images` | GenAI artifacts, OCR/content mismatches |
 | **Link/Metadata Analyzer** | `analysis.links-meta` | Anchor/URL mismatch, suspicious domains, header inconsistencies |
 
-### Explainable AI (XAI)
+## Explainable AI (XAI)
 
 The Decision Engine produces a structured, explainable verdict for every message.
 All individual analyzer scores are preserved, so an analyst can see **why** a
@@ -313,5 +313,5 @@ See the [LICENSE](LICENSE) file for the complete license text.
 
 - Issues: [GitHub Issues](https://github.com/kosavka223/AI-Slop-detector/issues)
 - Contact: m.gavrilenko@g.nsu.ru
-```
+````
 
