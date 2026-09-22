@@ -1,9 +1,10 @@
-````markdown
+```bash
+cat > README.md <<'READMEEOF'
 # AI-Slop-detector
 
 Multi-signal analysis system for detecting AI-generated and AI-assisted email spam.
 
-# Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
 - [Key Features](#key-features)
@@ -17,7 +18,7 @@ Multi-signal analysis system for detecting AI-generated and AI-assisted email sp
 - [Roadmap](#roadmap)
 - [License](#license)
 
-# Overview
+## Overview
 
 AI-Slop-detector is a multi-signal analysis system designed to detect AI-generated
 and AI-assisted email spam.
@@ -37,7 +38,7 @@ The system is built as an additional analytical layer on top of an existing
 anti-spam pipeline: it does not just output a class, but explains **which elements**
 of the message look AI-generated and **how confident** the system is.
 
-## Research Foundation
+### Research Foundation
 
 The detection methodology is based on recent academic research:
 
@@ -48,7 +49,7 @@ The detection methodology is based on recent academic research:
 
 ## Key Features
 
-## Multi-Signal Analysis
+### Multi-Signal Analysis
 
 The system combines several independent analyzers instead of relying on a single
 classifier. Each analyzer runs as an independent service and publishes its result
@@ -61,7 +62,7 @@ to its own Kafka topic:
 | **Image Analyzer** | `analysis.images` | GenAI artifacts, OCR/content mismatches |
 | **Link/Metadata Analyzer** | `analysis.links-meta` | Anchor/URL mismatch, suspicious domains, header inconsistencies |
 
-## Explainable AI (XAI)
+### Explainable AI (XAI)
 
 The Decision Engine produces a structured, explainable verdict for every message.
 All individual analyzer scores are preserved, so an analyst can see **why** a
@@ -94,51 +95,40 @@ message was flagged.
 
 ```mermaid
 graph TD
-    Client["👤 CLIENT<br/>POST /api/v1/analyze"]
-
-    Gateway["🚪 API GATEWAY<br/>FastAPI, task_id generation<br/>Kafka Topic: emails.raw"]
-
-    MockAnalyzer["📝 MOCK TEXT ANALYZER<br/>(placeholder for ML service)"]
-
-    E2E["🧪 E2E TEST HARNESS<br/>tools/e2e_test.py<br/>simulates html / images / links-meta results"]
-
-    Aggregator["🧩 AGGREGATOR<br/>4-of-N collection, deduplication,<br/>timeout handling, DLQ"]
-
-    Decision["⚖️ DECISION ENGINE<br/>verdict logic + explainability"]
-
-    PG["🗄️ PostgreSQL<br/>verdicts table"]
-
-    Output["📤 OUTPUT<br/>Kafka Topic: verdicts.final"]
+    Client["CLIENT: POST /api/v1/analyze"]
+    Gateway["API GATEWAY (FastAPI, task_id)"]
+    MockAnalyzer["MOCK TEXT ANALYZER (placeholder for ML)"]
+    E2E["E2E TEST HARNESS (e2e_test.py)"]
+    Aggregator["AGGREGATOR (4-of-N, dedup, timeout, DLQ)"]
+    Decision["DECISION ENGINE (verdicts + explainability)"]
+    PG["PostgreSQL verdicts"]
+    Output["OUTPUT: verdicts.final"]
 
     Client --> Gateway
     Gateway -->|emails.raw| MockAnalyzer
     MockAnalyzer -->|analysis.text| Aggregator
-    E2E -->|analysis.html / analysis.images / analysis.links-meta| Aggregator
+    E2E -->|analysis.html / images / links-meta| Aggregator
     Aggregator -->|analysis.aggregated| Decision
     Decision -->|verdicts.final| Output
     Decision --> PG
-
-    classDef default fill:#f9f9f9,stroke:#333,stroke-width:2px;
-    classDef infra fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
-    class Gateway,Decision infra;
 ```
 
 **Data flow:**
 
 ```
-POST /analyze ─► api-gateway ─► emails.raw ─► text analyzer ──┐
-                                                              │   ┌────────────┐
-   e2e harness ─► analysis.html ──────────────────────────────┼──►│ AGGREGATOR │
-                ─► analysis.images ───────────────────────────┤   └─────┬──────┘
-                ─► analysis.links-meta                        │         │ analysis.aggregated
-                                                              │         ▼
+POST /analyze -> api-gateway -> emails.raw -> text analyzer --+
+                                                              |   +------------+
+   e2e harness -> analysis.html ------------------------------+-->| AGGREGATOR |
+              ->  analysis.images -----------------------------+   +-----+------+
+              ->  analysis.links-meta                          |         |
+                                                               |         v analysis.aggregated
                                                        (text from mock)
-                                                                        ┌─────────────────┐
-                                                              │         │ DECISION ENGINE │
-                                                              │         └───┬───────┬───┘
-                                                     dead-letter-queue ◄───┘       │
-                                                                                   ▼
-                                                          verdicts.final + PostgreSQL
+                                                                         +-----------------+
+                                                               |         | DECISION ENGINE |
+                                                               |         +---+---------+---+
+                                                      dead-letter-queue <--+         |
+                                                                                v
+                                                       verdicts.final + PostgreSQL
 ```
 
 ### Service Communication
@@ -193,13 +183,13 @@ make up-all
 This builds and starts **7 containers**: Kafka, PostgreSQL, Redis,
 api-gateway, aggregator, decision-engine and mock-analyzer.
 
-> ⚠️ Wait ~40 seconds after startup — services need time to connect to Kafka.
+**Wait ~40 seconds after startup — services need time to connect to Kafka.**
 
 ### 4. Verify
 
 ```bash
-make status                              # all containers Up
-curl http://localhost:8000/health        # {"status":"healthy"}
+make status
+curl http://localhost:8000/health
 ```
 
 ### 5. Run an end-to-end test
@@ -212,8 +202,7 @@ Then check the verdict in PostgreSQL:
 
 ```bash
 docker exec -it slop-postgres psql -U dev -d slop -P pager=off -c \
-  "SELECT email_id, overall_risk, ai_assistance_score, decided_at \
-   FROM verdicts ORDER BY decided_at DESC LIMIT 5;"
+  "SELECT email_id, overall_risk, ai_assistance_score, decided_at FROM verdicts ORDER BY decided_at DESC LIMIT 5;"
 ```
 
 ## API Reference
@@ -232,7 +221,6 @@ Interactive Swagger UI is available at **http://localhost:8000/docs**
 curl -X POST http://localhost:8000/api/v1/analyze \
   -H "Content-Type: application/json" \
   -d '{"text": "Some text to analyze..."}'
-# → {"task_id": "...", "status": "accepted"}
 ```
 
 ## Makefile Commands
@@ -248,27 +236,22 @@ curl -X POST http://localhost:8000/api/v1/analyze \
 
 ## Project Structure
 
-```text
+```
 AI-Slop-detector/
-│
 ├── docker-compose.yml          # Full system: 7 containers
 ├── Dockerfile.service          # Shared image for all services
 ├── Makefile                    # make up-all / status / logs / psql / down
 ├── init.sql                    # Database schema (verdicts table)
-│
 ├── services/                   # Backend microservices
 │   ├── api-gateway/            # HTTP entry point, Kafka producer, Redis task store
 │   ├── aggregator/             # 4-of-N result collection, dedup, timeouts, DLQ
 │   └── decision-engine/        # Verdict logic + PostgreSQL persistence
-│
 ├── shared/                     # Contracts shared across teams
 │   ├── models/                 # Topic names, message schemas (pydantic)
 │   └── proto/                  # gRPC contract stub for the ML team
-│
 ├── tools/
 │   ├── mock_analyzer.py        # Mock text analyzer (placeholder for ML service)
 │   └── e2e_test.py             # Automated end-to-end pipeline test
-│
 └── ML/                         # ML team workspace
 ```
 
@@ -278,13 +261,13 @@ AI-Slop-detector/
 |---|---|
 | Analyzer never responds | Aggregation timeout (30 s) → partial result or DLQ |
 | Malformed message in a topic | Parsed safely, sent to Dead Letter Queue, service keeps running |
-| Duplicate analyzer results | Deduplication in the aggregator's task buffer |
-| Kafka temporarily unavailable | `restart: on-failure` — Docker restarts the service; messages are preserved in topics |
-| Client blocking on slow analysis | Async pattern: `task_id` + polling `/status` endpoint |
+| Duplicate analyzer results | Deduplication in the aggregator task buffer |
+| Kafka temporarily unavailable | restart: on-failure — Docker restarts the service, messages preserved in topics |
+| Client blocking on slow analysis | Async pattern: task_id + polling /status endpoint |
 
 ## Roadmap
 
-### Phase 1 — Core Backend ✅
+### Phase 1 — Core Backend (DONE)
 
 - Multi-service event-driven pipeline on Kafka
 - API Gateway with async task processing
@@ -295,23 +278,23 @@ AI-Slop-detector/
 ### Phase 2 — ML Integration
 
 - Replace mock analyzer with a real ML service (same Kafka contract)
-- Implement analyzers per gRPC contract (`shared/proto/analyzer.proto`)
+- Implement analyzers per gRPC contract (shared/proto/analyzer.proto)
 - Model quality evaluation: precision, recall, F1-score, ROC-AUC
 
 ### Phase 3 — Production Hardening
 
-- Kafka healthchecks + ordered startup (`depends_on: condition: service_healthy`)
+- Kafka healthchecks + ordered startup
 - Horizontal scaling of analyzers (Kafka partitions)
 - Metrics and observability
 
 ## License
 
 This project is licensed under the GNU General Public License v3.0.
-See the [LICENSE](LICENSE) file for the complete license text.
+See the LICENSE file for the complete license text.
 
 ## Support
 
-- Issues: [GitHub Issues](https://github.com/kosavka223/AI-Slop-detector/issues)
+- Issues: https://github.com/kosavka223/AI-Slop-detector/issues
 - Contact: m.gavrilenko@g.nsu.ru
-````
-
+READMEEOF
+```
