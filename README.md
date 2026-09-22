@@ -1,4 +1,3 @@
-```bash
 cat > README.md <<'READMEEOF'
 # AI-Slop-detector
 
@@ -57,10 +56,10 @@ to its own Kafka topic:
 
 | Analyzer | Topic | What it detects |
 |---|---|---|
-| **Text Analyzer** | `analysis.text` | LLM-specific writing patterns, style inconsistencies, burstiness anomalies |
-| **HTML Analyzer** | `analysis.html` | AI-generated boilerplate, unusual DOM structures, suspicious layouts |
+| **Text Analyzer** | `analysis.text` | LLM-specific writing patterns, style inconsistencies |
+| **HTML Analyzer** | `analysis.html` | AI-generated boilerplate, unusual DOM structures |
 | **Image Analyzer** | `analysis.images` | GenAI artifacts, OCR/content mismatches |
-| **Link/Metadata Analyzer** | `analysis.links-meta` | Anchor/URL mismatch, suspicious domains, header inconsistencies |
+| **Link/Metadata Analyzer** | `analysis.links-meta` | Anchor/URL mismatch, suspicious domains |
 
 ### Explainable AI (XAI)
 
@@ -70,7 +69,7 @@ message was flagged.
 
 **Example verdict stored in PostgreSQL:**
 
-```json
+~~~json
 {
   "task_id": "6237d5f5-5b1e-4ce8-ac14-05b20ad86dec",
   "verdict": "PROBABLY_HUMAN",
@@ -79,7 +78,7 @@ message was flagged.
   "individual_scores": [0.332, 0.581, 0.19, 0.297],
   "decided_at": "2026-09-21T14:41:45.104644+00:00"
 }
-```
+~~~
 
 **Verdict scale:**
 
@@ -93,7 +92,7 @@ message was flagged.
 
 ## Architecture
 
-```mermaid
+~~~mermaid
 graph TD
     Client["CLIENT: POST /api/v1/analyze"]
     Gateway["API GATEWAY (FastAPI, task_id)"]
@@ -111,17 +110,17 @@ graph TD
     Aggregator -->|analysis.aggregated| Decision
     Decision -->|verdicts.final| Output
     Decision --> PG
-```
+~~~
 
 **Data flow:**
 
-```
+~~~
 POST /analyze -> api-gateway -> emails.raw -> text analyzer --+
                                                               |   +------------+
    e2e harness -> analysis.html ------------------------------+-->| AGGREGATOR |
               ->  analysis.images -----------------------------+   +-----+------+
               ->  analysis.links-meta                          |         |
-                                                               |         v analysis.aggregated
+                                                               |         v  analysis.aggregated
                                                        (text from mock)
                                                                          +-----------------+
                                                                |         | DECISION ENGINE |
@@ -129,7 +128,7 @@ POST /analyze -> api-gateway -> emails.raw -> text analyzer --+
                                                       dead-letter-queue <--+         |
                                                                                 v
                                                        verdicts.final + PostgreSQL
-```
+~~~
 
 ### Service Communication
 
@@ -161,24 +160,24 @@ changes to backend code**.
 
 ### 1. Clone the repository
 
-```bash
+~~~bash
 git clone https://github.com/kosavka223/AI-Slop-detector.git
 cd AI-Slop-detector
-```
+~~~
 
 ### 2. Set up the Python environment
 
-```bash
+~~~bash
 python3 -m venv venv
 source venv/bin/activate
 pip install fastapi uvicorn pydantic aiokafka redis asyncpg httpx
-```
+~~~
 
 ### 3. Start the full stack
 
-```bash
+~~~bash
 make up-all
-```
+~~~
 
 This builds and starts **7 containers**: Kafka, PostgreSQL, Redis,
 api-gateway, aggregator, decision-engine and mock-analyzer.
@@ -187,23 +186,23 @@ api-gateway, aggregator, decision-engine and mock-analyzer.
 
 ### 4. Verify
 
-```bash
+~~~bash
 make status
 curl http://localhost:8000/health
-```
+~~~
 
 ### 5. Run an end-to-end test
 
-```bash
+~~~bash
 python tools/e2e_test.py
-```
+~~~
 
 Then check the verdict in PostgreSQL:
 
-```bash
+~~~bash
 docker exec -it slop-postgres psql -U dev -d slop -P pager=off -c \
   "SELECT email_id, overall_risk, ai_assistance_score, decided_at FROM verdicts ORDER BY decided_at DESC LIMIT 5;"
-```
+~~~
 
 ## API Reference
 
@@ -217,11 +216,11 @@ Interactive Swagger UI is available at **http://localhost:8000/docs**
 
 **Example:**
 
-```bash
+~~~bash
 curl -X POST http://localhost:8000/api/v1/analyze \
   -H "Content-Type: application/json" \
   -d '{"text": "Some text to analyze..."}'
-```
+~~~
 
 ## Makefile Commands
 
@@ -236,7 +235,7 @@ curl -X POST http://localhost:8000/api/v1/analyze \
 
 ## Project Structure
 
-```
+~~~
 AI-Slop-detector/
 ├── docker-compose.yml          # Full system: 7 containers
 ├── Dockerfile.service          # Shared image for all services
@@ -253,7 +252,7 @@ AI-Slop-detector/
 │   ├── mock_analyzer.py        # Mock text analyzer (placeholder for ML service)
 │   └── e2e_test.py             # Automated end-to-end pipeline test
 └── ML/                         # ML team workspace
-```
+~~~
 
 ## Reliability Features
 
@@ -297,4 +296,3 @@ See the LICENSE file for the complete license text.
 - Issues: https://github.com/kosavka223/AI-Slop-detector/issues
 - Contact: m.gavrilenko@g.nsu.ru
 READMEEOF
-```
