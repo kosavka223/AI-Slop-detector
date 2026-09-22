@@ -91,3 +91,29 @@ services:
       KAFKA_BOOTSTRAP: kafka:29092
     depends_on:
       - kafka
+
+  html-analyzer:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE: html-analyzer
+    command: python -u services/html-analyzer/app/main.py
+    restart: on-failure
+    environment:
+      KAFKA_BOOTSTRAP: kafka:29092
+    depends_on:
+      - kafka
+
+  image-analyzer:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE: image-analyzer
+    command: python -u services/image-analyzer/app/main.py
+    restart: on-failure
+    environment:
+      KAFKA_BOOTSTRAP: kafka:29092
+    depends_on:
+      - kafka
