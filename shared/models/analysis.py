@@ -12,16 +12,41 @@ class AnalyzerName(str, Enum):
     LINKS_META = "links-meta"
 
 
+class EmailImage(BaseModel):
+    """Картинка из письма (inline CID или вложение) для image-analyzer."""
+    content_type: str = "application/octet-stream"
+    filename: Optional[str] = None
+    content_id: Optional[str] = None
+    size: int = 0
+    data_base64: str
+
+
+class EmailLink(BaseModel):
+    """Ссылка из письма: anchor_text нужен link-analyzer'у для детекта подмены."""
+    href: str
+    anchor_text: str = ""
+    source: str = "html"  # "html" | "text"
+
+
 class ParsedEmail(BaseModel):
+    """Parser -> анализаторы (топик emails.parsed).
+
+    Контракт Data/Network Engineer. Валидируется парсером перед публикацией.
+    """
+    task_id: str
     email_id: str
-    subject: str
-    from_addr: str
-    to_addr: str
+    subject: str = ""
+    from_addr: str = ""
+    to_addr: str = ""
+    date: str = ""
+    message_id: str = ""
     text_part: Optional[str] = None
     html_part: Optional[str] = None
-    image_urls: list[str] = Field(default_factory=list)
-    links: list[dict] = Field(default_factory=list)
+    images: list[EmailImage] = Field(default_factory=list)
+    links: list[EmailLink] = Field(default_factory=list)
+    attachments: list[dict] = Field(default_factory=list)
     raw_headers: dict = Field(default_factory=dict)
+    parsed_at: Optional[datetime] = None
 
 
 class AnalyzerResult(BaseModel):

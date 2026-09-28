@@ -49,23 +49,44 @@ def analyze_image(image_data: bytes) -> tuple[float, dict, str]:
     return round(min(score, 1.0), 3), features, reason
 
 
-def _payload(data: dict) -> bytes:
-    value = data.get("image_data") or data.get("image_base64")
-    if isinstance(value, str):
-        return base64.b64decode(value.split(",", 1)[-1], validate=False)
-    return value if isinstance(value, (bytes, bytearray)) else b""
+def _payloads(data: dict) -> list[bytes]:
+    """emails.parsed: список картинок от парсера (+ legacy: одиночная картинка)."""
+    payloads: list[bytes] = []
+    for image in data.get("images") or []:
+        value = image.get("data_base64") if isinstance(image, dict) else None
+        if isinstance(value, str):
+            try:
+                payloads.append(base64.b64decode(value, validate=False))
+            except Exception:
+                continue
+    legacy = data.get("image_data") or data.get("image_base64")
+    if isinstance(legacy, str):
+        try:
+            payloads.append(base64.b64decode(legacy.split(",", 1)[-1], validate=False))
+        except Exception:
+            pass
+    elif isinstance(legacy, (bytes, bytearray)):
+        payloads.append(bytes(legacy))
+    return payloads
 
 
 async def main() -> None:
-    consumer = AIOKafkaConsumer("emails.raw", bootstrap_servers=KAFKA, group_id="image-analyzer")
+    consumer = AIOKafkaConsumer("emails.parsed", bootstrap_servers=KAFKA, group_id="image-analyzer")
     producer = AIOKafkaProducer(bootstrap_servers=KAFKA, value_serializer=lambda v: json.dumps(v).encode())
     await consumer.start(); await producer.start()
-    print("Image analyzer: emails.raw -> analysis.images", flush=True)
+    print("Image analyzer: emails.parsed -> analysis.images", flush=True)
     try:
         async for msg in consumer:
             try:
                 data = json.loads(msg.value.decode())
-                score, features, reason = analyze_image(_payload(data))
+                payloads = _payloads(data)
+                if payloads:
+                    results = [analyze_image(p) for p in payloads]
+                    score = max(r[0] for r in results)
+                    features = {"image_count": len(results), "images": [r[1] for r in results]}
+                    reason = "; ".join(r[2] for r in results)
+                else:
+                    score, features, reason = 0.0, {"image_count": 0}, "no image payloads in message"
                 await producer.send_and_wait("analysis.images", {"task_id": data["task_id"], "analyzer_type": "images", "score": score, "features": features, "reason": reason, "analyzed_at": datetime.now(timezone.utc).isoformat()})
             except Exception as exc:
                 print(f"[images] skipped malformed message: {exc}", flush=True)

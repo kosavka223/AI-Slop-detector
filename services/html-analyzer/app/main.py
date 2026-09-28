@@ -1,4 +1,4 @@
-"""HTML structure analyzer: emails.raw -> analysis.html."""
+"""HTML structure analyzer: emails.parsed -> analysis.html."""
 from __future__ import annotations
 
 import asyncio
@@ -81,15 +81,15 @@ def analyze_html(html: str) -> tuple[float, dict, str]:
 
 
 async def main() -> None:
-    consumer = AIOKafkaConsumer("emails.raw", bootstrap_servers=KAFKA, group_id="html-analyzer")
+    consumer = AIOKafkaConsumer("emails.parsed", bootstrap_servers=KAFKA, group_id="html-analyzer")
     producer = AIOKafkaProducer(bootstrap_servers=KAFKA, value_serializer=lambda v: json.dumps(v).encode())
     await consumer.start(); await producer.start()
-    print("HTML analyzer: emails.raw -> analysis.html", flush=True)
+    print("HTML analyzer: emails.parsed -> analysis.html", flush=True)
     try:
         async for msg in consumer:
             try:
                 data = json.loads(msg.value.decode())
-                score, features, reason = analyze_html(data.get("html") or data.get("html_part") or "")
+                score, features, reason = analyze_html(data.get("html_part") or "")
                 await producer.send_and_wait("analysis.html", {"task_id": data["task_id"], "analyzer_type": "html", "score": score, "features": features, "reason": reason, "analyzed_at": datetime.now(timezone.utc).isoformat()})
             except Exception as exc:
                 print(f"[html] skipped malformed message: {exc}", flush=True)
